@@ -1,7 +1,7 @@
 {
   "name": "syntex",
   "version": "0.0.1",
-  "description": "Scalebale library for parsing and tokenizing source code",
+  "description": "Scalable library for parsing and tokenizing source code",
   "main": "index.js",
   "scripts": {
     "test": "./node_modules/mocha/bin/mocha "
