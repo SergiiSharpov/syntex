@@ -13,6 +13,7 @@
     "Syntax",
     "AST"
   ],
+  "repository": "https://github.com/SergiiSharpov/syntex.git",
   "author": "SergeySharpov",
   "license": "MIT",
   "devDependencies": {
