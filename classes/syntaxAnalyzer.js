@@ -22,13 +22,24 @@ class SyntaxAnalyzer {
      */
     analyze(tokenList = [], parent = this.tree, analyzerNodes = this.defaultNodeProps) {
         let i = 0;
+        let valid, errorNode;
         while (i < tokenList.length) {
             let step = 1;
+            valid = false;
             for (let node of analyzerNodes) {
                 let info = node.run(tokenList, i, parent, this);
-                info && (step = info);
+                if (info) {
+                    step = info;
+                    valid = true;
+                } else {
+                    errorNode = node;
+                }
             }
             i += step;
+
+            if (!valid && errorNode) {
+                errorNode.getError();
+            }
         }
     }
 
@@ -151,6 +162,14 @@ class AnalyzerNode {
     }
 
     /**
+     * Returns syntax error
+     * @returns {Object}
+     */
+    getError() {
+        return null;
+    }
+
+    /**
      * Returns content from source code using start, end tokens
      * @param content {String}
      * @param list {Array}
@@ -174,6 +193,7 @@ class SequenceNode extends AnalyzerNode {
         super(props);
         this.sequence = props.sequence || [];
         this.onError = props.onError;
+        this.error = null;
     }
 
     /**
@@ -200,14 +220,33 @@ class SequenceNode extends AnalyzerNode {
 
         let error = `Unexpected ${type} '${tokenList[end].value}' in "${content}" ${row}:${index}`;
 
-        this.onError({
+        this.error = {
             row,
             index,
             content,
             error,
             type,
             analyzerType: this.type
-        });
+        };
+    }
+
+    /**
+     *
+     * @returns {boolean}
+     * @private
+     */
+    __emitErrors() {
+        if (!this.onError) {
+            return false;
+        }
+        this.error && this.onError(this.error);
+        this.error = null;
+        return true;
+    }
+
+    getError() {
+        this.__emitErrors();
+        return true;
     }
 
     /**
@@ -221,32 +260,34 @@ class SequenceNode extends AnalyzerNode {
     test(tokenList, index, parent, analyzer) {
         if (tokenList[index].type === this.tokenType) {
             let valid = true;
+            this.error = null;
             let count = 0;
             let target = 0;
             let ranges = [];
 
             for (let i = 0; i < this.sequence.length; i++) {
+
                 if (this.sequence[i] instanceof AnalyzerNode) {
                     target = this.sequence[i].test(tokenList, index + count, parent, analyzer);
                     if (!target) {
+                        (count > 0 && valid) && this.__pushError(tokenList, index, index + count, analyzer);
                         valid = false;
-                        if (count > 0) this.__pushError(tokenList, index, index + count, analyzer);
                     } else {
                         ranges.push([index + count, index + count + target.count - 1]);
                         count += target.count;
                     }
                 } else if (typeof this.sequence[i] === 'string') {
                     if (tokenList[index + count].value.indexOf(this.sequence[i]) === -1) {
+                        (count > 0 && valid) && this.__pushError(tokenList, index, index + count, analyzer);
                         valid = false;
-                        if (count > 0) this.__pushError(tokenList, index, index + count, analyzer);
                     } else {
                         ranges.push([index + count, index + count + 1]);
                         count++;
                     }
                 } else if (typeof this.sequence[i] === 'object') {
                     if (this.sequence[i].type.indexOf(tokenList[index + count].type) === -1) {
+                        (count > 0 && valid) && this.__pushError(tokenList, index, index + count, analyzer);
                         valid = false;
-                        if (count > 0) this.__pushError(tokenList, index, index + count, analyzer);
                     } else {
                         ranges.push([index + count, index + count + 1]);
                         count++;
@@ -255,12 +296,14 @@ class SequenceNode extends AnalyzerNode {
             }
 
             if (!valid) {
+                //this.__emitErrors();
                 return null;
             }
 
             return {
                 count,
-                ranges
+                ranges,
+                error: this.error
             };
         }
         
