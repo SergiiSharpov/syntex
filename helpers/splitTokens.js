@@ -13,7 +13,7 @@ const Subtokens = {
  * @function
  * @param string {String}
  * @param sub {Object}
- * @returns {Array}
+ * @returns {Object}
  */
 const splitTokens = (string, sub = {}) => {
     let tokens = [];
@@ -48,7 +48,10 @@ const splitTokens = (string, sub = {}) => {
         });
     }
 
-    return result;
+    return {
+        data: result,
+        program: string
+    };
 };
 
 module.exports = {

@@ -14,9 +14,10 @@ class TokenSolver {
      * @param token {Object}
      * @param target {Number}
      * @param tokenList {Array}
+     * @param program {String}
      * @returns {Object|null}
      */
-    solve(token, target, tokenList) {
+    solve(token, target, tokenList, program) {
         if (this.include.length && this.include.indexOf(token) >= 0) {
             return {
                 value: token,
@@ -47,25 +48,19 @@ class StringSolver extends TokenSolver {
      * @param token {Object}
      * @param position {Number}
      * @param tokenList {Array}
+     * @param program {String}
      * @returns {Object|null}
      */
-    solve(token, position, tokenList) {
+    solve(token, position, tokenList, program) {
         if (this.delimiters.indexOf(token) >= 0) {
             let next = position + 1;
             while(next < tokenList.length) {
 
-                if (token === tokenList[next].value) {
-                    let value = tokenList.slice(position + 1, next).map((item, index, list) => {
-                        let div = '';
-                        if (index)
-                        for(let i=0; i<item.range[0] - list[index - 1].range[1]; i++) {
-                            div += ' ';
-                        }
-                        return div + item.value;
-                    }).join('');
+                if (token === tokenList[next].value && tokenList[next - 1].value !== '\\') {
+                    let value = program.slice(tokenList[position].range[0], tokenList[next].range[1]).replace(/\\/g,'');
 
                     return {
-                        value: token + value + token,
+                        value: value,
                         offset: next - position + 1
                     }
                 }
@@ -102,7 +97,7 @@ class TokenGroup {
     __getTokenInfo(list, props) {
         for (let solverKey in this.solvers) {
             let solver = this.solvers[solverKey];
-            let info = solver.solve(list[props.target].value, props.target, list);
+            let info = solver.solve(list[props.target].value, props.target, list, props.program);
             if (info) {
                 return {
                     type: solverKey,
@@ -123,14 +118,16 @@ class TokenGroup {
 
     /**
      * Solves array of tokens
-     * @param tokenList {Array}
+     * @param tokenList {Object}
      * @returns {Array}
      */
     solve(tokenList) {
         let tokens = [];
         let target = 0;
-        while (target < tokenList.length) {
-            let info = this.__getTokenInfo(tokenList, {target});
+        let program = tokenList.program;
+        let list = tokenList.data;
+        while (target < list.length) {
+            let info = this.__getTokenInfo(list, {target, program});
             tokens.push({
                 type: info.type,
                 value: info.value,
