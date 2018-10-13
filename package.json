@@ -1,6 +1,6 @@
 {
   "name": "syntex",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Scalable library for parsing and tokenizing source code",
   "main": "index.js",
   "scripts": {
