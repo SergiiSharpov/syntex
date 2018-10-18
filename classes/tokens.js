@@ -1,4 +1,6 @@
 const {DefaultTokenTypes} = require("./../helpers/consts");
+const NamedRegExp = require('named-regexp-groups');
+const NamedRegExpConstructor = NamedRegExp.default || NamedRegExp;
 
 const escapeRegExp = (text) => {
     return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
@@ -130,8 +132,6 @@ class TokenGroup {
             return a.solver.priority < b.solver.priority;
         });
 
-        console.log(solvers);
-
         for(item of solvers) {
             solver = item.solver;
 
@@ -146,11 +146,20 @@ class TokenGroup {
             regexps.push(`(?<${item.name}>${include}${regexp})`);
         }
 
-        regexps.push(`(?<${this.defaultSolver}>\S)`);
+        regexps.push(`(?<${this.defaultSolver}>\\S)`);
 
         resultRegexp = `(${regexps.join('|')})`;
 
-        this.regexp = new RegExp(resultRegexp, 'gm');
+        this.regexp = new NamedRegExpConstructor(resultRegexp, 'gm');
+
+        let groups = {};
+        for (let key in this.regexp.groups) {
+            if (isNaN(key)) {
+                groups[key] = this.regexp.groups[key];
+            }
+        }
+
+        this.regexp.groups = groups;
     }
 
     /**
@@ -189,7 +198,7 @@ class TokenGroup {
     solve(program) {
 
         let tokens = [];
-        let result, groupKey, group;
+        let result, groupKey;
 
         while (result = this.regexp.exec(program)) {
             for (groupKey in result.groups) {

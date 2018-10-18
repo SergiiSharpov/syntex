@@ -18,5 +18,8 @@
   "license": "MIT",
   "devDependencies": {
     "mocha": "^5.2.0"
+  },
+  "dependencies": {
+    "named-regexp-groups": "^1.0.3"
   }
 }
