@@ -35,7 +35,7 @@ const splitTokens = (string, sub = {}) => {
 
     let result = [];
     for (let token of tokens) {
-        let subtokens = token.value.match(/(\W)|(\w+)/gm);
+        let subtokens = token.value.match(/([0-9.]+)|(\W)|(\w+)/gm);
         let pos = 0;
         let start = 0;
         subtokens.forEach((value) => {

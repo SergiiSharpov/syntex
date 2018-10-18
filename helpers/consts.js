@@ -23,7 +23,8 @@ const DefaultNodeTypes = {
     BLOCK: "BlockDefinition",
     ARGUMENTS: "ArgumentsDefinition",
     DECLARATION: "Declaration",
-    COMMENT_MULTIPLE: "CommentMultiple"
+    COMMENT_MULTIPLE: "CommentMultiple",
+    EXPRESSION: "Expression",
 };
 
 /**

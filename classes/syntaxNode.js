@@ -8,6 +8,7 @@ class SyntaxNode {
         this.value = null;
         this.type = null;
         this.parent = null;
+        this.userData = {};
     }
 
     /**

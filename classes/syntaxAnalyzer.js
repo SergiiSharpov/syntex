@@ -181,6 +181,53 @@ class AnalyzerNode {
     }
 }
 
+class CombinedNode extends AnalyzerNode {
+    constructor(props = {boundaries: [], values: []}) {
+        super(props);
+        this.boundaries = props.boundaries;
+        this.values = props.values;
+    }
+
+    test(tokenList, index, parent, analyzer) {
+        let count = 0;
+        let MAX_COUNT = 999;
+        //let breaked = false;
+
+        while (tokenList[index + count] && this.boundaries.indexOf(tokenList[index + count].value) === -1 && count < MAX_COUNT) {
+            count++;
+        }
+
+        if (count > 1) {
+            return {
+                count: count,
+                ranges: [index, index + count]
+            };
+        }
+
+        return null;
+    }
+
+    run(tokenList, index, parent, analyzer) {
+        let test = this.test(tokenList, index, parent, analyzer);
+        if (test) {
+            let length = test.count;
+
+            let node = new SyntaxNode();
+
+            node.type = this.type;
+            node.value = tokenList.slice(index, index + length);
+            node.valueAsString = AnalyzerNode.getContentFromRange(analyzer.program, tokenList, index, index + length - 1);
+
+            parent.append(node);
+
+            return length;
+        }
+        return null;
+    }
+}
+
+
+
 /**
  * Sequence node helps to parse groups of tokens from token list
  */
@@ -366,6 +413,9 @@ class BlockNode extends AnalyzerNode {
      * @returns {null}
      */
     test(tokenList, index, parent, analyzer) {
+        if (!tokenList[index]) {
+            console.log(tokenList);
+        }
         if (tokenList[index].type === this.tokenType) {
             if (SyntaxAnalyzer.getReducedValue(tokenList, index, this.openers.length, 'value') === this.openers) {
                 let data = SyntaxAnalyzer.parseMultipleBlock(tokenList, index, this.openers, this.closers).length;
@@ -411,5 +461,6 @@ module.exports = {
     SyntaxAnalyzer,
     AnalyzerNode,
     SequenceNode,
+    CombinedNode,
     BlockNode
 };
