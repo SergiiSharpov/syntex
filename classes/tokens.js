@@ -1,5 +1,9 @@
 const {DefaultTokenTypes} = require("./../helpers/consts");
 
+const escapeRegExp = (text) => {
+    return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+};
+
 /**
  * Base class for solving tokens
  */
@@ -7,6 +11,7 @@ class TokenSolver {
     constructor() {
         this.include = [];
         this.regexp = null;
+        this.priority = 1;
     }
 
     /**
@@ -33,6 +38,10 @@ class TokenSolver {
 
         return null;
     }
+
+    build() {
+        return null;
+    }
 }
 
 /**
@@ -42,6 +51,17 @@ class StringSolver extends TokenSolver {
     constructor() {
         super();
         this.delimiters = [];
+    }
+
+    build() {
+        let regular = 'T(?:\\\\\.|[^\\T\\\\\])*T';
+
+        let regexps = [];
+        for(let delimiter of this.delimiters) {
+            regexps.push(regular.slice(0).replace(/T/g, delimiter));
+        }
+
+        this.regexp = new RegExp(regexps.join('|'));
     }
     /**
      * Solves token in token list
@@ -86,6 +106,51 @@ class TokenGroup {
     constructor(solvers = {}, defaultSolverId = DefaultTokenTypes.UNKNOWN) {
         this.solvers = solvers;
         this.defaultSolver = defaultSolverId;
+
+        this.regexp = null;
+
+        this.build();
+    }
+
+    build() {
+        let solver, key, include, regexp, item;
+
+        let regexps = [];
+        let resultRegexp;
+
+        let solvers = [];
+        for(key in this.solvers) {
+            solvers.push({
+                solver: this.solvers[key],
+                name: key
+            });
+        }
+
+        solvers = solvers.sort((a, b) => {
+            return a.solver.priority < b.solver.priority;
+        });
+
+        console.log(solvers);
+
+        for(item of solvers) {
+            solver = item.solver;
+
+            include = solver.include.map((item) => {
+                return escapeRegExp(item);
+            });
+
+            include = (solver.include.length) ? `(${include.join('|')})` : '';
+            regexp = (solver.regexp) ? `(${solver.regexp.source})` : '';
+
+            if (solver.include.length || solver.regexp)
+            regexps.push(`(?<${item.name}>${include}${regexp})`);
+        }
+
+        regexps.push(`(?<${this.defaultSolver}>\S)`);
+
+        resultRegexp = `(${regexps.join('|')})`;
+
+        this.regexp = new RegExp(resultRegexp, 'gm');
     }
 
     /**
@@ -118,25 +183,45 @@ class TokenGroup {
 
     /**
      * Solves array of tokens
-     * @param tokenList {Object}
+     * @param program {String}
      * @returns {Array}
      */
-    solve(tokenList) {
+    solve(program) {
+
         let tokens = [];
-        let target = 0;
-        let program = tokenList.program;
-        let list = tokenList.data;
-        while (target < list.length) {
-            let info = this.__getTokenInfo(list, {target, program});
-            tokens.push({
-                type: info.type,
-                value: info.value,
-                range: info.range
-            });
-            target += info.offset;
+        let result, groupKey, group;
+
+        while (result = this.regexp.exec(program)) {
+            for (groupKey in result.groups) {
+                if (result.groups[groupKey]) {
+                    tokens.push({
+                        type: groupKey,
+                        value: result.groups[groupKey],
+                        range: [result.index, result.index + result.groups[groupKey].length]
+                    });
+                }
+            }
         }
 
         return tokens;
+
+
+        // let tokens = [];
+        // let target = 0;
+        // let program = tokenList.program;
+        // let list = tokenList.data;
+        // while (target < list.length) {
+        //     let info = this.__getTokenInfo(list, {target, program});
+        //     tokens.push({
+        //         type: info.type,
+        //         value: info.value,
+        //         range: info.range
+        //     });
+        //     target += info.offset;
+        // }
+        //
+        // return tokens;
+
     }
 }
 
@@ -154,6 +239,7 @@ const generateTokenGroup = (tokenTypes = {}, tokenSolvers = {}) => {
         let className = tokenSolvers[tokenTypes[key]] && tokenSolvers[tokenTypes[key]].type || TokenSolver;
         solvers[tokenTypes[key]] = new className();
         Object.assign(solvers[tokenTypes[key]], tokenSolvers[tokenTypes[key]]);
+        solvers[tokenTypes[key]].build();
         if (solvers[tokenTypes[key]].default) {
             defaultSolver = tokenTypes[key];
         }
