@@ -1,3 +1,4 @@
+const EventEmitter = require("./EventEmitter");
 const {SyntaxNode} = require("./syntaxNode");
 const {DefaultNodeTypes} = require("../");
 
@@ -31,6 +32,7 @@ class SyntaxAnalyzer {
                 if (info) {
                     step = info;
                     valid = true;
+                    node.emit('detect', node.lastNode);
                     break;
                 } else {
                     errorNode = node;
@@ -39,6 +41,7 @@ class SyntaxAnalyzer {
             i += step;
 
             if (!valid && errorNode) {
+                errorNode.emit('syntax-error', {...errorNode.error});
                 errorNode.getError();
             }
         }
@@ -125,7 +128,7 @@ class SyntaxAnalyzer {
 /**
  * Analyzer node helps to build AST
  */
-class AnalyzerNode {
+class AnalyzerNode extends EventEmitter {
     /**
      *
      * @param tokenType {String}
@@ -133,9 +136,11 @@ class AnalyzerNode {
      * @param subNodes {Array|undefined}
      */
     constructor({tokenType, type = DefaultNodeTypes.UNKNOWN, subNodes = undefined}) {
+        super();
         this.tokenType = tokenType;
         this.type = type;
         this.subNodes = subNodes;
+        this.lastNode = null;
     }
 
     /**
@@ -205,6 +210,8 @@ class FunctionNode extends AnalyzerNode {
 
             parent.append(node);
 
+            this.lastNode = node;
+
             return length;
         }
         return null;
@@ -248,6 +255,8 @@ class CombinedNode extends AnalyzerNode {
             node.valueAsString = AnalyzerNode.getContentFromRange(analyzer.program, tokenList, index, index + length - 1);
 
             parent.append(node);
+
+            this.lastNode = node;
 
             return length;
         }
@@ -405,6 +414,8 @@ class SequenceNode extends AnalyzerNode {
 
             parent.append(node);
 
+            this.lastNode = node;
+
             for(let i=0; i<this.sequence.length; i++) {
                 if (this.sequence[i] instanceof AnalyzerNode) {
                     analyzer.analyze(tokenList.slice(test.ranges[i][0], test.ranges[i][1] + 1), node, this.subNodes);
@@ -476,6 +487,8 @@ class BlockNode extends AnalyzerNode {
             node.valueAsString = AnalyzerNode.getContentFromRange(analyzer.program, tokenList, index, index + length - 1);
 
             parent.append(node);
+            this.lastNode = node;
+
             analyzer.analyze(node.value, node, this.subNodes);
 
             return length;
