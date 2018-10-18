@@ -182,6 +182,35 @@ class AnalyzerNode {
     }
 }
 
+class FunctionNode extends AnalyzerNode {
+    constructor(props = {onTest: null}) {
+        super(props);
+        this.onTest = props.onTest;
+    }
+
+    test(tokenList, index, parent, analyzer) {
+        return (this.onTest) ? this.onTest(tokenList, index, parent, analyzer) : null;
+    }
+
+    run(tokenList, index, parent, analyzer) {
+        let test = this.test(tokenList, index, parent, analyzer);
+        if (test) {
+            let length = test.count;
+
+            let node = new SyntaxNode();
+
+            node.type = this.type;
+            node.value = tokenList.slice(index, index + length);
+            node.valueAsString = AnalyzerNode.getContentFromRange(analyzer.program, tokenList, index, index + length - 1);
+
+            parent.append(node);
+
+            return length;
+        }
+        return null;
+    }
+}
+
 class CombinedNode extends AnalyzerNode {
     constructor(props = {boundaries: [], values: []}) {
         super(props);
@@ -461,5 +490,6 @@ module.exports = {
     AnalyzerNode,
     SequenceNode,
     CombinedNode,
+    FunctionNode,
     BlockNode
 };
