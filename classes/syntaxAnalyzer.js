@@ -31,6 +31,7 @@ class SyntaxAnalyzer {
                 if (info) {
                     step = info;
                     valid = true;
+                    break;
                 } else {
                     errorNode = node;
                 }
@@ -191,7 +192,6 @@ class CombinedNode extends AnalyzerNode {
     test(tokenList, index, parent, analyzer) {
         let count = 0;
         let MAX_COUNT = 999;
-        //let breaked = false;
 
         while (tokenList[index + count] && this.boundaries.indexOf(tokenList[index + count].value) === -1 && count < MAX_COUNT) {
             count++;
@@ -343,7 +343,6 @@ class SequenceNode extends AnalyzerNode {
             }
 
             if (!valid) {
-                //this.__emitErrors();
                 return null;
             }
 

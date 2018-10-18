@@ -204,24 +204,6 @@ class TokenGroup {
         }
 
         return tokens;
-
-
-        // let tokens = [];
-        // let target = 0;
-        // let program = tokenList.program;
-        // let list = tokenList.data;
-        // while (target < list.length) {
-        //     let info = this.__getTokenInfo(list, {target, program});
-        //     tokens.push({
-        //         type: info.type,
-        //         value: info.value,
-        //         range: info.range
-        //     });
-        //     target += info.offset;
-        // }
-        //
-        // return tokens;
-
     }
 }
 
