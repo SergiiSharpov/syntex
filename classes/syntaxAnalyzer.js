@@ -134,13 +134,15 @@ class AnalyzerNode extends EventEmitter {
      * @param tokenType {String}
      * @param type {String}
      * @param subNodes {Array|undefined}
+     * @param important {Boolean}
      */
-    constructor({tokenType, type = DefaultNodeTypes.UNKNOWN, subNodes = undefined}) {
+    constructor({tokenType, type = DefaultNodeTypes.UNKNOWN, subNodes = undefined, important = true}) {
         super();
         this.tokenType = tokenType;
         this.type = type;
         this.subNodes = subNodes;
         this.lastNode = null;
+        this.important = important;
     }
 
     /**
@@ -194,25 +196,13 @@ class FunctionNode extends AnalyzerNode {
     }
 
     test(tokenList, index, parent, analyzer) {
-        return (this.onTest) ? this.onTest(tokenList, index, parent, analyzer) : null;
+        return (this.onTest) ? this.onTest.call(this, tokenList, index, parent, analyzer) : null;
     }
 
     run(tokenList, index, parent, analyzer) {
         let test = this.test(tokenList, index, parent, analyzer);
         if (test) {
-            let length = test.count;
-
-            let node = new SyntaxNode();
-
-            node.type = this.type;
-            node.value = tokenList.slice(index, index + length);
-            node.valueAsString = AnalyzerNode.getContentFromRange(analyzer.program, tokenList, index, index + length - 1);
-
-            parent.append(node);
-
-            this.lastNode = node;
-
-            return length;
+            return test.count;
         }
         return null;
     }
@@ -228,8 +218,14 @@ class CombinedNode extends AnalyzerNode {
     test(tokenList, index, parent, analyzer) {
         let count = 0;
         let MAX_COUNT = 999;
+        let breaked = false;
 
-        while (tokenList[index + count] && this.boundaries.indexOf(tokenList[index + count].value) === -1 && count < MAX_COUNT) {
+        while (tokenList[index + count] && !breaked && count < MAX_COUNT) {
+            if (this.boundaries instanceof Array && this.boundaries.indexOf(tokenList[index + count].value) === -1) {
+                breaked = true;
+            } else if (this.boundaries instanceof RegExp && !this.boundaries.test(tokenList[index + count].value)) {
+                breaked = true;
+            }
             count++;
         }
 
@@ -277,6 +273,7 @@ class SequenceNode extends AnalyzerNode {
     constructor(props = {sequence: [], onError: null}) {
         super(props);
         this.sequence = props.sequence || [];
+        this.sequenceValid = [];
         this.onError = props.onError;
         this.error = null;
     }
@@ -354,14 +351,18 @@ class SequenceNode extends AnalyzerNode {
 
                 if (this.sequence[i] instanceof AnalyzerNode) {
                     target = this.sequence[i].test(tokenList, index + count, parent, analyzer);
-                    if (!target) {
+                    if (!target && this.sequence[i].important) {
                         (count > 0 && valid) && this.__pushError(tokenList, index, index + count, analyzer);
                         valid = false;
-                    } else {
+                    } else if (!target) {
+                        this.sequenceValid[i] = false;
+                        ranges.push([0, 0]);
+                    } else if (target) {
                         ranges.push([index + count, index + count + target.count - 1]);
                         count += target.count;
+                        this.sequenceValid[i] = true;
                     }
-                } else if (typeof this.sequence[i] === 'string') {
+                } else if (typeof this.sequence[i] === 'string' || this.sequence[i] instanceof RegExp) {
                     if (tokenList[index + count].value.indexOf(this.sequence[i]) === -1) {
                         (count > 0 && valid) && this.__pushError(tokenList, index, index + count, analyzer);
                         valid = false;
@@ -417,7 +418,7 @@ class SequenceNode extends AnalyzerNode {
             this.lastNode = node;
 
             for(let i=0; i<this.sequence.length; i++) {
-                if (this.sequence[i] instanceof AnalyzerNode) {
+                if (this.sequence[i] instanceof AnalyzerNode && this.sequenceValid[i]) {
                     analyzer.analyze(tokenList.slice(test.ranges[i][0], test.ranges[i][1] + 1), node, this.subNodes);
                 }
             }
@@ -452,14 +453,12 @@ class BlockNode extends AnalyzerNode {
      * @returns {null}
      */
     test(tokenList, index, parent, analyzer) {
-        if (!tokenList[index]) {
-            console.log(tokenList);
-        }
         if (tokenList[index].type === this.tokenType) {
             if (SyntaxAnalyzer.getReducedValue(tokenList, index, this.openers.length, 'value') === this.openers) {
-                let data = SyntaxAnalyzer.parseMultipleBlock(tokenList, index, this.openers, this.closers).length;
+                let data = SyntaxAnalyzer.parseMultipleBlock(tokenList, index, this.openers, this.closers);
+                if (data)
                 return {
-                    count: data,
+                    count: data.length,
                     ranges: [index, index + data]
                 };
             }

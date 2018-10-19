@@ -49,6 +49,52 @@ class SyntaxNode {
         return null;
     }
 
+    findIndex(node) {
+        if (this.parent) {
+            for(let key in this.parent.childs) {
+                if (this.parent.childs[key] === node) {
+                    return +key;
+                }
+            }
+        }
+
+        return -1;
+    }
+
+    nextSibling() {
+        let index = this.findIndex(this);
+
+        if (index > -1 && this.parent.childs[index + 1]) {
+            return this.parent.childs[index + 1];
+        }
+
+        return null
+    }
+
+    prevSibling() {
+        let index = this.findIndex(this);
+
+        if (index > 0) {
+            return this.parent.childs[index - 1];
+        }
+
+        return null
+    }
+
+    traverse(callback) {
+        callback(this);
+        for (let child of this.childs) {
+            child.traverse(callback);
+        }
+    }
+
+    traverseAncestor(callback) {
+        callback(this);
+        if (this.parent) {
+            this.parent.traverseAncestor(callback);
+        }
+    }
+
     /**
      * Appends node to the target
      * @param node {SyntaxNode}
