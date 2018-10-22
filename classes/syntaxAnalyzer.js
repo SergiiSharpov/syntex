@@ -28,6 +28,7 @@ class SyntaxAnalyzer {
             let step = 1;
             valid = false;
             for (let node of analyzerNodes) {
+                if(!node) continue;
                 let info = node.run(tokenList, i, parent, this);
                 if (info) {
                     step = info;
@@ -193,6 +194,7 @@ class FunctionNode extends AnalyzerNode {
     constructor(props = {onTest: null}) {
         super(props);
         this.onTest = props.onTest;
+        this.onRun = props.onRun;
     }
 
     test(tokenList, index, parent, analyzer) {
@@ -202,6 +204,9 @@ class FunctionNode extends AnalyzerNode {
     run(tokenList, index, parent, analyzer) {
         let test = this.test(tokenList, index, parent, analyzer);
         if (test) {
+            if (this.onRun) {
+                this.onRun.call(this, test.count, tokenList, index, parent, analyzer);
+            }
             return test.count;
         }
         return null;
@@ -419,7 +424,7 @@ class SequenceNode extends AnalyzerNode {
 
             for(let i=0; i<this.sequence.length; i++) {
                 if (this.sequence[i] instanceof AnalyzerNode && this.sequenceValid[i]) {
-                    analyzer.analyze(tokenList.slice(test.ranges[i][0], test.ranges[i][1] + 1), node, this.subNodes);
+                    analyzer.analyze(tokenList.slice(test.ranges[i][0], test.ranges[i][1] + 1), node, [this.sequence[i]]);
                 }
             }
 
