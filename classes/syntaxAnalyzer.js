@@ -4,10 +4,13 @@ const {DefaultNodeTypes} = require("../");
 
 /**
  * Syntax analyzer is used to build AST from token list
+ * @property tree {SyntaxNode} Root node of the AST
+ * @property defaultNodeProps {Array} Array of default nodes
+ * @property program {String} Program source code
  */
 class SyntaxAnalyzer {
     /**
-     * @param defaultNodes {Array}
+     * @param defaultNodes {Array} Array of default nodes
      */
     constructor(defaultNodes = []) {
         this.tree = new SyntaxNode();
@@ -17,9 +20,9 @@ class SyntaxAnalyzer {
 
     /**
      * Analyzes token list using parent and analyzer nodes
-     * @param tokenList {Array}
-     * @param parent {SyntaxNode}
-     * @param analyzerNodes {Array}
+     * @param tokenList {Array} List of the tokens to parse
+     * @param parent {SyntaxNode} Parent node
+     * @param analyzerNodes {Array} Array of AnalyzerNodes
      */
     analyze(tokenList = [], parent = this.tree, analyzerNodes = this.defaultNodeProps) {
         let i = 0;
@@ -50,11 +53,12 @@ class SyntaxAnalyzer {
 
     /**
      * Parses token list block starting from current position using opener and closer symbols
-     * @param list {Array}
-     * @param pos {Number}
-     * @param opener {String}
-     * @param closer {String}
-     * @returns {Object|null}
+     * @param list {Array} Array of tokens
+     * @param pos {Number} Start position
+     * @param opener {String} Block opening symbol
+     * @param closer {String} Block ending symbol
+     * @returns {Object|null} Start and End positions of the block
+     * @static
      */
     static parseBlock(list, pos, opener, closer) {
         let openedBlocks = 0;
@@ -80,10 +84,11 @@ class SyntaxAnalyzer {
 
     /**
      * Returns reduced value from token list using start position, count and key
-     * @param arr {Array}
-     * @param i {Number}
-     * @param count {Number}
-     * @param key {String}
+     * @param arr {Array} Array of tokens
+     * @param i {Number} Index to start from
+     * @param count {Number} Count of tokens to reduce
+     * @param key {String} Value should be reduced by this key
+     * @static
      */
     static getReducedValue(arr, i, count, key) {
         return arr.slice(i, i + count).reduce((a, b) => {
@@ -93,11 +98,12 @@ class SyntaxAnalyzer {
 
     /**
      * Parses token list block starting from current position using openers and closers symbols
-     * @param list {Array}
-     * @param pos {Number}
-     * @param openers {String}
-     * @param closers {String}
-     * @returns {Object|null}
+     * @param list {Array} Array of tokens
+     * @param pos {Number} Start position
+     * @param openers {String} Block opening symbols
+     * @param closers {String} Block ending symbols
+     * @returns {Object|null} Start and End positions of the block
+     * @static
      */
     static parseMultipleBlock(list, pos, openers, closers) {
         let openedBlocks = 0;
@@ -128,14 +134,18 @@ class SyntaxAnalyzer {
 
 /**
  * Analyzer node helps to build AST
+ * @property tokenType {String} Type of the token to start parse from
+ * @property type {String} Type of the AnalyzerNode
+ * @property subNodes {String} Sub nodes that will be used to parse children nodes, if not present - defaultNodes of SyntaxAnalyzer will be used
+ * @property important {Boolean} If false then sequence will be parsed even that node is not exist in the array of tokens
+ * @property lastNode {AnalyzerNode} Last created node
  */
 class AnalyzerNode extends EventEmitter {
     /**
-     *
-     * @param tokenType {String}
-     * @param type {String}
-     * @param subNodes {Array|undefined}
-     * @param important {Boolean}
+     * @param props.tokenType {String} Type of the token to start parse from
+     * @param props.type {String} Type of the AnalyzerNode
+     * @param props.subNodes {Array|undefined} Sub nodes that will be used to parse children nodes, if not present - defaultNodes of SyntaxAnalyzer will be used
+     * @param props.important {Boolean} If false then sequence will be parsed even that node is not exist in the array of tokens
      */
     constructor({tokenType, type = DefaultNodeTypes.UNKNOWN, subNodes = undefined, important = true}) {
         super();
@@ -143,11 +153,10 @@ class AnalyzerNode extends EventEmitter {
         this.type = type;
         this.subNodes = subNodes;
         this.lastNode = null;
-        this.important = important;
     }
 
     /**
-     * This method must return true if token list contain current node starting from current position
+     * Returns true if token list contain current node starting from current position
      * @param tokenList {Array}
      * @param index {Number}
      * @param parent {SyntaxNode}
@@ -159,7 +168,7 @@ class AnalyzerNode extends EventEmitter {
     }
 
     /**
-     * This method must update syntax tree if token list contain current node starting from current position
+     * Updates syntax tree if token list contain current node starting from current position
      * @param tokenList {Array}
      * @param index {Number}
      * @param parent {SyntaxNode}
@@ -184,14 +193,24 @@ class AnalyzerNode extends EventEmitter {
      * @param list {Array}
      * @param start {Number}
      * @param end {Number}
+     * @static
      */
     static getContentFromRange(content, list, start, end) {
         return content.slice(list[start].range[0], list[end].range[1]);
     }
 }
 
+/**
+ * Helps to build AST using user functions
+ * @property props.onTest {Function} Used to test if array of the tokens contains current Node
+ * @property props.onRun {Function} Used to create a child Node if array of the tokens contains current Node
+ */
 class FunctionNode extends AnalyzerNode {
-    constructor(props = {onTest: null}) {
+    /**
+     * @param props.onTest {Function} Used to test if array of the tokens contains current Node
+     * @param props.onRun {Function} Used to create a child Node if array of the tokens contains current Node
+     */
+    constructor(props = {onTest: null, onRun: null}) {
         super(props);
         this.onTest = props.onTest;
         this.onRun = props.onRun;
@@ -213,11 +232,14 @@ class FunctionNode extends AnalyzerNode {
     }
 }
 
+/**
+ * Helps to build AST using sequence of symbols
+ * @property props.boundaries {Array} Array of symbols that should be used to stop parsing
+ */
 class CombinedNode extends AnalyzerNode {
-    constructor(props = {boundaries: [], values: []}) {
+    constructor(props = {boundaries: []}) {
         super(props);
         this.boundaries = props.boundaries;
-        this.values = props.values;
     }
 
     test(tokenList, index, parent, analyzer) {
@@ -272,8 +294,8 @@ class CombinedNode extends AnalyzerNode {
  */
 class SequenceNode extends AnalyzerNode {
     /**
-     * @param props.sequence {Array}
-     * @param props.onError {Function}
+     * @param props.sequence {Array} The sequence of Node's, Tokens, Regular expressions, Objects
+     * @param props.onError {Function} The Syntax error callback
      */
     constructor(props = {sequence: [], onError: null}) {
         super(props);
@@ -331,19 +353,15 @@ class SequenceNode extends AnalyzerNode {
         return true;
     }
 
+    /**
+     * Emit's the syntax error if it present
+     * @returns {boolean}
+     */
     getError() {
         this.__emitErrors();
         return true;
     }
 
-    /**
-     * This method must return true if token list contain current node starting from current position
-     * @param tokenList {Array}
-     * @param index {Number}
-     * @param parent {SyntaxNode}
-     * @param analyzer {SyntaxAnalyzer}
-     * @returns {Object|null}
-     */
     test(tokenList, index, parent, analyzer) {
         if (tokenList[index].type === this.tokenType) {
             let valid = true;
@@ -400,14 +418,6 @@ class SequenceNode extends AnalyzerNode {
         return null;
     }
 
-    /**
-     * This method must update syntax tree if token list contain current node starting from current position
-     * @param tokenList {Array}
-     * @param index {Number}
-     * @param parent {SyntaxNode}
-     * @param analyzer {SyntaxAnalyzer}
-     * @returns {Number|null}
-     */
     run(tokenList, index, parent, analyzer) {
         let test = this.test(tokenList, index, parent, analyzer);
         if (test) {
@@ -440,7 +450,7 @@ class SequenceNode extends AnalyzerNode {
  */
 class BlockNode extends AnalyzerNode {
     /**
-     * @param props.values {Array}
+     * @param props.values {Array} Array that contains opener and closer symbols
      */
     constructor(props = {values: []}) {
         super(props);
@@ -449,14 +459,6 @@ class BlockNode extends AnalyzerNode {
         this.closers = props.values[1] || props.values[0];
     }
 
-    /**
-     * This method must return true if token list contain current node starting from current position
-     * @param tokenList {Array}
-     * @param index {Number}
-     * @param parent {SyntaxNode}
-     * @param analyzer {SyntaxAnalyzer}
-     * @returns {null}
-     */
     test(tokenList, index, parent, analyzer) {
         if (tokenList[index].type === this.tokenType) {
             if (SyntaxAnalyzer.getReducedValue(tokenList, index, this.openers.length, 'value') === this.openers) {
@@ -472,14 +474,6 @@ class BlockNode extends AnalyzerNode {
         return null;
     }
 
-    /**
-     * This method must update syntax tree if token list contain current node starting from current position
-     * @param tokenList {Array}
-     * @param index {Number}
-     * @param parent {SyntaxNode}
-     * @param analyzer {SyntaxAnalyzer}
-     * @returns {null}
-     */
     run(tokenList, index, parent, analyzer) {
         let test = this.test(tokenList, index, parent, analyzer);
         if (test) {

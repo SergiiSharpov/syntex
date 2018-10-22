@@ -1,5 +1,7 @@
 /**
  * Base node of AST
+ * @property childs {Array} Array of child nodes
+ * @property range {Array} Start & End point of the Node in the source code
  */
 class SyntaxNode {
     constructor() {
@@ -13,7 +15,7 @@ class SyntaxNode {
 
     /**
      * Finds a node with target type going through each parent node
-     * @param nodeType
+     * @param nodeType {String} Type of the node to search
      * @returns {SyntaxNode|null}
      */
     findUp(nodeType) {
@@ -30,7 +32,7 @@ class SyntaxNode {
 
     /**
      * Finds a node with target type going through each child node
-     * @param nodeType
+     * @param nodeType {String} Type of the node to search
      * @returns {SyntaxNode|null}
      */
     findDown(nodeType) {
@@ -49,6 +51,11 @@ class SyntaxNode {
         return null;
     }
 
+    /**
+     * Returns index of passed node through the parent node, returns -1 if Node doesn't exist
+     * @param node {SyntaxNode} SyntaxNode to search
+     * @returns {Number}
+     */
     findIndex(node) {
         if (this.parent) {
             for(let key in this.parent.childs) {
@@ -61,6 +68,10 @@ class SyntaxNode {
         return -1;
     }
 
+    /**
+     * Returns next sibling Node or null
+     * @returns {SyntaxNode|null}
+     */
     nextSibling() {
         let index = this.findIndex(this);
 
@@ -71,6 +82,10 @@ class SyntaxNode {
         return null
     }
 
+    /**
+     * Returns previous sibling Node or null
+     * @returns {SyntaxNode|null}
+     */
     prevSibling() {
         let index = this.findIndex(this);
 
@@ -81,6 +96,10 @@ class SyntaxNode {
         return null
     }
 
+    /**
+     * Execute a callback for each child node
+     * @param callback {Function} Callback function
+     */
     traverse(callback) {
         callback(this);
         for (let child of this.childs) {
@@ -88,6 +107,10 @@ class SyntaxNode {
         }
     }
 
+    /**
+     * Execute a callback for each parent node
+     * @param callback {Function} Callback function
+     */
     traverseAncestor(callback) {
         callback(this);
         if (this.parent) {
@@ -97,7 +120,7 @@ class SyntaxNode {
 
     /**
      * Appends node to the target
-     * @param node {SyntaxNode}
+     * @param node {SyntaxNode} Node that will be attached to this
      */
     append(node) {
         this.childs.push(node);

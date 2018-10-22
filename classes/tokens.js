@@ -8,6 +8,9 @@ const escapeRegExp = (text) => {
 
 /**
  * Base class for solving tokens
+ * @property include {Array} Array of words that can be used to parse token
+ * @property regexp {RegExp} Regular expression to parse token
+ * @property priority {Number} Priority for this token
  */
 class TokenSolver {
     constructor() {
@@ -18,10 +21,10 @@ class TokenSolver {
 
     /**
      * Solves token in token list
-     * @param token {Object}
-     * @param target {Number}
-     * @param tokenList {Array}
-     * @param program {String}
+     * @param token {Object} Current token
+     * @param target {Number} Index of current token
+     * @param tokenList {Array} List of the tokens
+     * @param program {String} Source code
      * @returns {Object|null}
      */
     solve(token, target, tokenList, program) {
@@ -41,6 +44,10 @@ class TokenSolver {
         return null;
     }
 
+    /**
+     * Used to build regexp from self properties
+     * @returns {*}
+     */
     build() {
         return null;
     }
@@ -48,6 +55,7 @@ class TokenSolver {
 
 /**
  * Helps to solve strings
+ * @property delimiters {Array} Array of symbols that used to determine string
  */
 class StringSolver extends TokenSolver {
     constructor() {
@@ -65,14 +73,7 @@ class StringSolver extends TokenSolver {
 
         this.regexp = new RegExp(regexps.join('|'));
     }
-    /**
-     * Solves token in token list
-     * @param token {Object}
-     * @param position {Number}
-     * @param tokenList {Array}
-     * @param program {String}
-     * @returns {Object|null}
-     */
+
     solve(token, position, tokenList, program) {
         if (this.delimiters.indexOf(token) >= 0) {
             let next = position + 1;
@@ -99,11 +100,14 @@ class StringSolver extends TokenSolver {
 
 /**
  * Group that collect solvers and can be used to solve array of tokens
+ * @property solvers {Object} Object that contains solvers as SolverName => SolverInstance
+ * @property defaultSolver {String} Name of the default solver
+ * @property regexp {RegExp} Final regular expression that created with solvers
  */
 class TokenGroup {
     /**
-     * @param solvers {Object}
-     * @param defaultSolverId {String}
+     * @param solvers {Object} Object that contains solvers as SolverName => SolverInstance
+     * @param defaultSolverId {String} Name of the default solver
      */
     constructor(solvers = {}, defaultSolverId = DefaultTokenTypes.UNKNOWN) {
         this.solvers = solvers;
