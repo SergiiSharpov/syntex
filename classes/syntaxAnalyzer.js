@@ -234,9 +234,12 @@ class FunctionNode extends AnalyzerNode {
 
 /**
  * Helps to build AST using sequence of symbols
- * @property props.boundaries {Array} Array of symbols that should be used to stop parsing
+ * @property boundaries {Array} Array of symbols that should be used to stop parsing
  */
 class CombinedNode extends AnalyzerNode {
+    /**
+     * @param props.boundaries {Array} Array of symbols that should be used to stop parsing
+     */
     constructor(props = {boundaries: []}) {
         super(props);
         this.boundaries = props.boundaries;
