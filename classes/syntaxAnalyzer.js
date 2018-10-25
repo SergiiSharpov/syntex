@@ -202,8 +202,8 @@ class AnalyzerNode extends EventEmitter {
 
 /**
  * Helps to build AST using user functions
- * @property props.onTest {Function} Used to test if array of the tokens contains current Node
- * @property props.onRun {Function} Used to create a child Node if array of the tokens contains current Node
+ * @property onTest {Function} Used to test if array of the tokens contains current Node
+ * @property onRun {Function} Used to create a child Node if array of the tokens contains current Node
  */
 class FunctionNode extends AnalyzerNode {
     /**
