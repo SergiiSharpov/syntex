@@ -45,7 +45,7 @@ class SyntaxAnalyzer {
             i += step;
 
             if (!valid && errorNode) {
-                errorNode.emit('syntax-error', {...errorNode.error});
+                errorNode.error && errorNode.emit('syntax-error', {data: {...errorNode.error}});
                 errorNode.getError();
             }
         }
@@ -147,12 +147,13 @@ class AnalyzerNode extends EventEmitter {
      * @param props.subNodes {Array|undefined} Sub nodes that will be used to parse children nodes, if not present - defaultNodes of SyntaxAnalyzer will be used
      * @param props.important {Boolean} If false then sequence will be parsed even that node is not exist in the array of tokens
      */
-    constructor({tokenType, type = DefaultNodeTypes.UNKNOWN, subNodes = undefined, important = true}) {
+    constructor({tokenType, type = DefaultNodeTypes.UNKNOWN, subNodes = undefined, important = true, template = null}) {
         super();
         this.tokenType = tokenType;
         this.type = type;
         this.subNodes = subNodes;
         this.lastNode = null;
+        this.template = template;
     }
 
     /**
@@ -318,10 +319,6 @@ class SequenceNode extends AnalyzerNode {
      * @private
      */
     __pushError(tokenList, start, end, analyzer) {
-        if (!this.onError) {
-            return false;
-        }
-
         let type = tokenList[end].type;
         let content = AnalyzerNode.getContentFromRange(analyzer.program, tokenList, start, end);
         let _fullContent = analyzer.program.slice(0, tokenList[end].range[1]);
@@ -349,6 +346,7 @@ class SequenceNode extends AnalyzerNode {
      */
     __emitErrors() {
         if (!this.onError) {
+            this.error = null;
             return false;
         }
         this.error && this.onError(this.error);
@@ -363,6 +361,17 @@ class SequenceNode extends AnalyzerNode {
     getError() {
         this.__emitErrors();
         return true;
+    }
+
+    __processTemplate(analyzer, tokenList, test) {
+        if (this.template && this.lastNode) {
+            let keys = Object.keys(this.template);
+            let val;
+            for(let key of keys) {
+                val = this.template[key];
+                this.lastNode.userData[key] = AnalyzerNode.getContentFromRange(analyzer.program, tokenList, test.ranges[val][0], test.ranges[val][1] - 1);
+            }
+        }
     }
 
     test(tokenList, index, parent, analyzer) {
@@ -390,6 +399,14 @@ class SequenceNode extends AnalyzerNode {
                     }
                 } else if (typeof this.sequence[i] === 'string' || this.sequence[i] instanceof RegExp) {
                     if (tokenList[index + count].value.indexOf(this.sequence[i]) === -1) {
+                        (count > 0 && valid) && this.__pushError(tokenList, index, index + count, analyzer);
+                        valid = false;
+                    } else {
+                        ranges.push([index + count, index + count + 1]);
+                        count++;
+                    }
+                } else if (this.sequence[i] instanceof Array) {
+                    if (this.sequence[i].indexOf(tokenList[index + count].value) === -1) {
                         (count > 0 && valid) && this.__pushError(tokenList, index, index + count, analyzer);
                         valid = false;
                     } else {
@@ -434,12 +451,15 @@ class SequenceNode extends AnalyzerNode {
             parent.append(node);
 
             this.lastNode = node;
+            this.__processTemplate(analyzer, tokenList, test);
 
             for(let i=0; i<this.sequence.length; i++) {
                 if (this.sequence[i] instanceof AnalyzerNode && this.sequenceValid[i]) {
                     analyzer.analyze(tokenList.slice(test.ranges[i][0], test.ranges[i][1] + 1), node, [this.sequence[i]]);
                 }
             }
+
+            this.subNodes && this.subNodes.length && analyzer.analyze(node.value, node, this.subNodes);
 
             return length;
         }

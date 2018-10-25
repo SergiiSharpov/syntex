@@ -13,6 +13,10 @@ class SyntaxNode {
         this.userData = {};
     }
 
+    get(key) {
+        return this.userData[key] || null;
+    }
+
     /**
      * Finds a node with target type going through each parent node
      * @param nodeType {String} Type of the node to search
