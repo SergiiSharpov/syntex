@@ -9,39 +9,16 @@ const escapeRegExp = (text) => {
 /**
  * Base class for solving tokens
  * @property include {Array} Array of words that can be used to parse token
+ * @property symbols {Array} Array of symbols that can be used to parse token
  * @property regexp {RegExp} Regular expression to parse token
  * @property priority {Number} Priority for this token
  */
 class TokenSolver {
     constructor() {
         this.include = [];
+        this.symbols = [];
         this.regexp = null;
         this.priority = 1;
-    }
-
-    /**
-     * Solves token in token list
-     * @param token {Object} Current token
-     * @param target {Number} Index of current token
-     * @param tokenList {Array} List of the tokens
-     * @param program {String} Source code
-     * @returns {Object|null}
-     */
-    solve(token, target, tokenList, program) {
-        if (this.include.length && this.include.indexOf(token) >= 0) {
-            return {
-                value: token,
-                offset: 1
-            };
-        }
-        if (this.regexp && token.search(this.regexp) >= 0) {
-            return {
-                value: token,
-                offset: 1
-            }
-        }
-
-        return null;
     }
 
     /**
@@ -73,29 +50,6 @@ class StringSolver extends TokenSolver {
 
         this.regexp = new RegExp(regexps.join('|'));
     }
-
-    solve(token, position, tokenList, program) {
-        if (this.delimiters.indexOf(token) >= 0) {
-            let next = position + 1;
-            while(next < tokenList.length) {
-
-                if (token === tokenList[next].value && tokenList[next - 1].value !== '\\') {
-                    let value = program.slice(tokenList[position].range[0], tokenList[next].range[1]).replace(/\\/g,'');
-
-                    return {
-                        value: value,
-                        offset: next - position + 1
-                    }
-                }
-
-                next++;
-            }
-
-            return null;
-        }
-
-        return null;
-    }
 }
 
 /**
@@ -119,7 +73,7 @@ class TokenGroup {
     }
 
     build() {
-        let solver, key, include, regexp, item;
+        let solver, key, include, regexp, item, symbols;
 
         let regexps = [];
         let resultRegexp;
@@ -143,11 +97,21 @@ class TokenGroup {
                 return escapeRegExp(item);
             });
 
+            symbols = solver.symbols.map((item) => {
+                return escapeRegExp(item);
+            });
+
             include = (solver.include.length) ? `(${include.join('|')})` : '';
+            symbols = (solver.symbols.length) ? `(${symbols.join('|')})` : '';
             regexp = (solver.regexp) ? `(${solver.regexp.source})` : '';
 
-            if (solver.include.length || solver.regexp)
-            regexps.push(`(?<${item.name}>${include}${regexp})`);
+            if (solver.regexp) {
+                regexps.push(`(?<${item.name}>${regexp})`);
+            } else if (solver.include.length) {
+                regexps.push(`(\\W(?<${item.name}>${include})\\W)`);
+            } else if (solver.symbols.length) {
+                regexps.push(`(?<${item.name}>${symbols})`);
+            }
         }
 
         regexps.push(`(?<${this.defaultSolver}>\\S)`);
@@ -164,34 +128,6 @@ class TokenGroup {
         }
 
         this.regexp.groups = groups;
-    }
-
-    /**
-     * @param list {Object}
-     * @param props {Object}
-     * @returns {Object}
-     * @private
-     */
-    __getTokenInfo(list, props) {
-        for (let solverKey in this.solvers) {
-            let solver = this.solvers[solverKey];
-            let info = solver.solve(list[props.target].value, props.target, list, props.program);
-            if (info) {
-                return {
-                    type: solverKey,
-                    value: info.value,
-                    offset: info.offset,
-                    range: [list[props.target].range[0], list[props.target].range[0] + info.value.length]
-                }
-            }
-        }
-
-        return {
-            type: this.defaultSolver,
-            value: list[props.target].value,
-            range: list[props.target].range,
-            offset: 1
-        };
     }
 
     /**
