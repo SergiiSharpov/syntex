@@ -39,31 +39,29 @@ function countTokens(list, type) {
 }
 
 
-describe('tokenTypes', function() {
-    describe('program: ' + program, function() {
+describe('tokenTypes', () => {
+    describe(`program: ${program}`, () => {
 
         let group = generateTokenGroup(MyTokenTypes, solvers);
         let tokens = group.solve(program);
 
-        //console.log(tokens);
-
-        it('Keywords: should return 2', function() {
+        it('Keywords: should return 2', () => {
             assert.equal(countTokens(tokens, MyTokenTypes.KEYWORD), 2);
         });
 
-        it('Strings: should return 2', function() {
+        it('Strings: should return 2', () => {
             assert.equal(countTokens(tokens, MyTokenTypes.STRING), 2);
         });
 
-        it('Operators: should return 3', function() {
+        it('Operators: should return 3', () => {
             assert.equal(countTokens(tokens, MyTokenTypes.OPERATOR), 3);
         });
 
-        it('Delimiters: should return 2', function() {
+        it('Delimiters: should return 2', () => {
             assert.equal(countTokens(tokens, MyTokenTypes.DELIMITER), 2);
         });
 
-        it('Variables: should return 2', function() {
+        it('Variables: should return 2', () => {
             assert.equal(countTokens(tokens, MyTokenTypes.VARIABLE), 3);
         });
     });

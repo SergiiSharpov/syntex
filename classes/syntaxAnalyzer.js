@@ -31,7 +31,9 @@ class SyntaxAnalyzer {
             let step = 1;
             valid = false;
             for (let node of analyzerNodes) {
-                if(!node) continue;
+                if(!node) {
+                    continue;
+                }
                 let info = node.run(tokenList, i, parent, this);
                 if (info) {
                     step = info;
@@ -75,7 +77,7 @@ class SyntaxAnalyzer {
                 return {
                     start: pos,
                     end: i
-                }
+                };
             }
         }
 
@@ -124,7 +126,7 @@ class SyntaxAnalyzer {
                     start: pos,
                     end: i + cLenght,
                     length: i + cLenght - pos
-                }
+                };
             }
         }
 
@@ -227,8 +229,10 @@ class FunctionNode extends AnalyzerNode {
             if (this.onRun) {
                 this.onRun.call(this, test.count, tokenList, index, parent, analyzer);
             }
+
             return test.count;
         }
+
         return null;
     }
 }
@@ -262,7 +266,7 @@ class CombinedNode extends AnalyzerNode {
 
         if (count > 1) {
             return {
-                count: count,
+                count,
                 ranges: [index, index + count]
             };
         }
@@ -287,10 +291,10 @@ class CombinedNode extends AnalyzerNode {
 
             return length;
         }
+
         return null;
     }
 }
-
 
 
 /**
@@ -301,7 +305,8 @@ class SequenceNode extends AnalyzerNode {
      * @param props.sequence {Array} The sequence of Node's, Tokens, Regular expressions, Objects
      * @param props.onError {Function} The Syntax error callback
      */
-    constructor(props = {sequence: [], onError: null}) {
+    constructor(props = {sequence: [],
+        onError: null}) {
         super(props);
         this.sequence = props.sequence || [];
         this.sequenceValid = [];
@@ -347,10 +352,12 @@ class SequenceNode extends AnalyzerNode {
     __emitErrors() {
         if (!this.onError) {
             this.error = null;
+
             return false;
         }
         this.error && this.onError(this.error);
         this.error = null;
+
         return true;
     }
 
@@ -360,6 +367,7 @@ class SequenceNode extends AnalyzerNode {
      */
     getError() {
         this.__emitErrors();
+
         return true;
     }
 
@@ -434,7 +442,7 @@ class SequenceNode extends AnalyzerNode {
                 error: this.error
             };
         }
-        
+
         return null;
     }
 
@@ -453,7 +461,7 @@ class SequenceNode extends AnalyzerNode {
             this.lastNode = node;
             this.__processTemplate(analyzer, tokenList, test);
 
-            for(let i=0; i<this.sequence.length; i++) {
+            for(let i = 0; i < this.sequence.length; i++) {
                 if (this.sequence[i] instanceof AnalyzerNode && this.sequenceValid[i]) {
                     analyzer.analyze(tokenList.slice(test.ranges[i][0], test.ranges[i][1] + 1), node, [this.sequence[i]]);
                 }
@@ -486,11 +494,12 @@ class BlockNode extends AnalyzerNode {
         if (tokenList[index].type === this.tokenType) {
             if (SyntaxAnalyzer.getReducedValue(tokenList, index, this.openers.length, 'value') === this.openers) {
                 let data = SyntaxAnalyzer.parseMultipleBlock(tokenList, index, this.openers, this.closers);
-                if (data)
-                return {
-                    count: data.length,
-                    ranges: [index, index + data]
-                };
+                if (data) {
+                    return {
+                        count: data.length,
+                        ranges: [index, index + data]
+                    };
+                }
             }
         }
 

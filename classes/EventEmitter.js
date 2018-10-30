@@ -47,10 +47,12 @@ class EventEmitter {
 
         let self = this;
 
-        this.__events[event].push(function(e) {
+        let eventListener = (e) => {
             callback(e);
-            self.off.call(self, event, this);
-        });
+            Reflect.apply(self.off, self, [event, eventListener]);
+        };
+
+        this.__events[event].push(eventListener);
     }
 
     __cancel() {
@@ -61,7 +63,7 @@ class EventEmitter {
      * Emit's event
      * @param event {String} Name of the event
      * @param data {Object|null} Data tha will be passed to the listener
-     * @returns {null}
+     * @returns {*}
      */
     emit(event, data) {
         if (!this.__events[event]) {
@@ -71,7 +73,7 @@ class EventEmitter {
         let targetEvent;
 
         for(targetEvent of this.__events[event]) {
-            if (!this.__stop) {
+            if (this.__stop === false) {
                 targetEvent({
                     ...data,
                     event,
@@ -82,6 +84,8 @@ class EventEmitter {
                 break;
             }
         }
+
+        return true;
     }
 }
 module.exports = EventEmitter;
