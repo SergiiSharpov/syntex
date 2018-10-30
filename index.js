@@ -10,7 +10,7 @@ const FunctionNode = require("./src/nodes/FunctionNode");
 const CombinedNode = require("./src/nodes/CombinedNode");
 const SequenceNode = require("./src/nodes/SequenceNode");
 
-const {DefaultTokenTypes, tokenTypesMerge, DefaultNodeTypes} = require('./helpers/consts');
+const {DefaultTokenTypes, tokenTypesMerge, DefaultNodeTypes} = require('./src/helpers/consts');
 
 
 module.exports = {

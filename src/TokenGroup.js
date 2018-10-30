@@ -1,4 +1,4 @@
-const {DefaultTokenTypes} = require("./../helpers/consts");
+const {DefaultTokenTypes} = require("./helpers/consts");
 const TokenSolver = require("./solvers/TokenSolver");
 
 const NamedRegExp = require('named-regexp-groups');
