@@ -132,6 +132,4 @@ class SyntaxNode {
     }
 }
 
-module.exports = {
-    SyntaxNode
-};
+module.exports = SyntaxNode;
