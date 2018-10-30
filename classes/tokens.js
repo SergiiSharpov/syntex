@@ -138,9 +138,10 @@ class TokenGroup {
     solve(program) {
 
         let tokens = [];
-        let result, groupKey;
+        let groupKey;
+        let result = this.regexp.exec(program);
 
-        while (result = this.regexp.exec(program)) {
+        while (result) {
             for (groupKey in result.groups) {
                 if (result.groups[groupKey]) {
                     tokens.push({
@@ -150,6 +151,8 @@ class TokenGroup {
                     });
                 }
             }
+
+            result = this.regexp.exec(program);
         }
 
         return tokens;

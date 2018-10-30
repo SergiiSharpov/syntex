@@ -117,7 +117,7 @@ module.exports = {
         "max-lines": "off",
         "max-lines-per-function": "off",
         "max-nested-callbacks": "error",
-        "max-params": "error",
+        "max-params": "off",
         "max-statements": "off",
         "max-statements-per-line": "error",
         "multiline-comment-style": "error",
@@ -180,7 +180,7 @@ module.exports = {
         "no-octal-escape": "error",
         "no-param-reassign": "error",
         "no-path-concat": "error",
-        "no-plusplus": "error",
+        "no-plusplus": "off",
         "no-process-env": "error",
         "no-process-exit": "error",
         "no-proto": "error",
@@ -205,16 +205,21 @@ module.exports = {
         "no-throw-literal": "error",
         "no-trailing-spaces": "error",
         "no-undef-init": "error",
-        "no-undefined": "error",
+        "no-undefined": "off",
         "no-underscore-dangle": "off",
         "no-unmodified-loop-condition": "error",
         "no-unneeded-ternary": "error",
         "no-unused-expressions": "error",
+        "no-unused-vars": [
+            "error",
+            { "vars": "all", "args": "none", "ignoreRestSiblings": true }
+        ],
         "no-use-before-define": "error",
         "no-useless-call": "error",
         "no-useless-computed-key": "error",
         "no-useless-concat": "error",
         "no-useless-constructor": "error",
+        "no-useless-escape": "off",
         "no-useless-rename": "error",
         "no-useless-return": "error",
         "no-var": "error",
@@ -228,7 +233,10 @@ module.exports = {
             "error",
             "never"
         ],
-        "object-property-newline": "error",
+        "object-property-newline": [
+            "error",
+            { "allowAllPropertiesOnSameLine": true }
+        ],
         "object-shorthand": "error",
         "one-var": "off",
         "one-var-declaration-per-line": [

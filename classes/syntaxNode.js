@@ -44,10 +44,10 @@ class SyntaxNode {
             for (let child of this.childs) {
                 if (child.type === nodeType) {
                     return child;
-                    let childNode = child.findDown(nodeType);
-                    if (childNode) {
-                        return childNode;
-                    }
+                }
+                let childNode = child.findDown(nodeType);
+                if (childNode) {
+                    return childNode;
                 }
             }
         }

@@ -31,9 +31,6 @@ class SyntaxAnalyzer {
             let step = 1;
             valid = false;
             for (let node of analyzerNodes) {
-                if(!node) {
-                    continue;
-                }
                 let info = node.run(tokenList, i, parent, this);
                 if (info) {
                     step = info;
@@ -47,7 +44,9 @@ class SyntaxAnalyzer {
             i += step;
 
             if (!valid && errorNode) {
-                errorNode.error && errorNode.emit('syntax-error', {data: {...errorNode.error}});
+                if (errorNode.error) {
+                    errorNode.emit('syntax-error', {data: {...errorNode.error}});
+                }
                 errorNode.getError();
             }
         }
@@ -156,6 +155,7 @@ class AnalyzerNode extends EventEmitter {
         this.subNodes = subNodes;
         this.lastNode = null;
         this.template = template;
+        this.important = important;
     }
 
     /**
@@ -220,14 +220,18 @@ class FunctionNode extends AnalyzerNode {
     }
 
     test(tokenList, index, parent, analyzer) {
-        return (this.onTest) ? this.onTest.call(this, tokenList, index, parent, analyzer) : null;
+        if (this.onTest) {
+            return Reflect.apply(this.onTest, this, [tokenList, index, parent, analyzer]);
+        }
+
+        return null;
     }
 
     run(tokenList, index, parent, analyzer) {
         let test = this.test(tokenList, index, parent, analyzer);
         if (test) {
             if (this.onRun) {
-                this.onRun.call(this, test.count, tokenList, index, parent, analyzer);
+                Reflect.apply(this.onRun, this, [test.count, tokenList, index, parent, analyzer]);
             }
 
             return test.count;
@@ -355,7 +359,9 @@ class SequenceNode extends AnalyzerNode {
 
             return false;
         }
-        this.error && this.onError(this.error);
+        if (this.error) {
+            this.onError(this.error);
+        }
         this.error = null;
 
         return true;
