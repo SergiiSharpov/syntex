@@ -108,7 +108,7 @@ class TokenGroup {
             if (solver.regexp) {
                 regexps.push(`(?<${item.name}>${regexp})`);
             } else if (solver.include.length) {
-                regexps.push(`(\\W(?<${item.name}>${include})\\W)`);
+                regexps.push(`((\\W|^)(?<${item.name}>${include})\\W)`);
             } else if (solver.symbols.length) {
                 regexps.push(`(?<${item.name}>${symbols})`);
             }

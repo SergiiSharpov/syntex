@@ -22,7 +22,7 @@ solvers[MyTokenTypes.DELIMITER] = {
 };
 
 solvers[MyTokenTypes.OPERATOR] = {
-    include: ['=', '+']
+    symbols: ['=', '+']
 };
 
 solvers[MyTokenTypes.VARIABLE] = {
@@ -44,6 +44,8 @@ describe('tokenTypes', function() {
 
         let group = generateTokenGroup(MyTokenTypes, solvers);
         let tokens = group.solve(program);
+
+        //console.log(tokens);
 
         it('Keywords: should return 2', function() {
             assert.equal(countTokens(tokens, MyTokenTypes.KEYWORD), 2);
