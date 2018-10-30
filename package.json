@@ -4,7 +4,9 @@
   "description": "Scalable library for parsing and tokenizing source code",
   "main": "index.js",
   "scripts": {
-    "test": "./node_modules/mocha/bin/mocha "
+    "test": "./node_modules/mocha/bin/mocha",
+    "lint": "./node_modules/.bin/eslint ./",
+    "lintFix": "./node_modules/.bin/eslint --fix ./"
   },
   "keywords": [
     "JavaScript",
@@ -17,6 +19,7 @@
   "author": "SergeySharpov",
   "license": "MIT",
   "devDependencies": {
+    "eslint": "^5.8.0",
     "mocha": "^5.2.0"
   },
   "dependencies": {

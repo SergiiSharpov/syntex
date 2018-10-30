@@ -44,10 +44,10 @@ class SyntaxNode {
             for (let child of this.childs) {
                 if (child.type === nodeType) {
                     return child;
-                    let childNode = child.findDown(nodeType);
-                    if (childNode) {
-                        return childNode;
-                    }
+                }
+                let childNode = child.findDown(nodeType);
+                if (childNode) {
+                    return childNode;
                 }
             }
         }
@@ -64,7 +64,7 @@ class SyntaxNode {
         if (this.parent) {
             for(let key in this.parent.childs) {
                 if (this.parent.childs[key] === node) {
-                    return +key;
+                    return Number(key);
                 }
             }
         }
@@ -83,7 +83,7 @@ class SyntaxNode {
             return this.parent.childs[index + 1];
         }
 
-        return null
+        return null;
     }
 
     /**
@@ -97,7 +97,7 @@ class SyntaxNode {
             return this.parent.childs[index - 1];
         }
 
-        return null
+        return null;
     }
 
     /**
@@ -132,6 +132,4 @@ class SyntaxNode {
     }
 }
 
-module.exports = {
-    SyntaxNode
-};
+module.exports = SyntaxNode;

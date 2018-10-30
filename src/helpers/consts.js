@@ -24,7 +24,7 @@ const DefaultNodeTypes = {
     ARGUMENTS: "ArgumentsDefinition",
     DECLARATION: "Declaration",
     COMMENT_MULTIPLE: "CommentMultiple",
-    EXPRESSION: "Expression",
+    EXPRESSION: "Expression"
 };
 
 /**

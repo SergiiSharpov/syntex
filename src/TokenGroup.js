@@ -1,4 +1,6 @@
 const {DefaultTokenTypes} = require("./../helpers/consts");
+const TokenSolver = require("./solvers/TokenSolver");
+
 const NamedRegExp = require('named-regexp-groups');
 const NamedRegExpConstructor = NamedRegExp.default || NamedRegExp;
 
@@ -6,51 +8,6 @@ const escapeRegExp = (text) => {
     return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
 };
 
-/**
- * Base class for solving tokens
- * @property include {Array} Array of words that can be used to parse token
- * @property symbols {Array} Array of symbols that can be used to parse token
- * @property regexp {RegExp} Regular expression to parse token
- * @property priority {Number} Priority for this token
- */
-class TokenSolver {
-    constructor() {
-        this.include = [];
-        this.symbols = [];
-        this.regexp = null;
-        this.priority = 1;
-    }
-
-    /**
-     * Used to build regexp from self properties
-     * @returns {*}
-     */
-    build() {
-        return null;
-    }
-}
-
-/**
- * Helps to solve strings
- * @property delimiters {Array} Array of symbols that used to determine string
- */
-class StringSolver extends TokenSolver {
-    constructor() {
-        super();
-        this.delimiters = [];
-    }
-
-    build() {
-        let regular = 'T(?:\\\\\.|[^\\T\\\\\])*T';
-
-        let regexps = [];
-        for(let delimiter of this.delimiters) {
-            regexps.push(regular.slice(0).replace(/T/g, delimiter));
-        }
-
-        this.regexp = new RegExp(regexps.join('|'));
-    }
-}
 
 /**
  * Group that collect solvers and can be used to solve array of tokens
@@ -138,9 +95,10 @@ class TokenGroup {
     solve(program) {
 
         let tokens = [];
-        let result, groupKey;
+        let groupKey;
+        let result = this.regexp.exec(program);
 
-        while (result = this.regexp.exec(program)) {
+        while (result) {
             for (groupKey in result.groups) {
                 if (result.groups[groupKey]) {
                     tokens.push({
@@ -150,6 +108,8 @@ class TokenGroup {
                     });
                 }
             }
+
+            result = this.regexp.exec(program);
         }
 
         return tokens;
@@ -181,8 +141,6 @@ const generateTokenGroup = (tokenTypes = {}, tokenSolvers = {}) => {
 
 
 module.exports = {
-    TokenSolver,
-    StringSolver,
     TokenGroup,
     generateTokenGroup
 };

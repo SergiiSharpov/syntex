@@ -41,7 +41,7 @@ solvers[DefaultTokenTypes.OPERATOR] = {
         '+', '-',
         ';', ':',
         ',', '.',
-        '?', '!',
+        '?', '!'
     ]
 };
 
@@ -65,12 +65,8 @@ solvers[DefaultTokenTypes.STRING] = {
     priority: 99
 };
 
-function countTokens(list, type) {
-    return list.filter((item) => item.type === type).length;
-}
 
-
-describe('Performance test', function() {
+describe('Performance test', () => {
     let group = generateTokenGroup(DefaultTokenTypes, solvers);
 
     let tokens;
