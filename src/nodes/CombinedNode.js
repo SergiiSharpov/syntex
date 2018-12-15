@@ -20,12 +20,13 @@ class CombinedNode extends AnalyzerNode {
         let breaked = false;
 
         while (tokenList[index + count] && !breaked && count < MAX_COUNT) {
-            if (this.boundaries instanceof Array && this.boundaries.indexOf(tokenList[index + count].value) === -1) {
+            if (this.boundaries instanceof Array && this.boundaries.indexOf(tokenList[index + count].value) !== -1) {
                 breaked = true;
-            } else if (this.boundaries instanceof RegExp && !this.boundaries.test(tokenList[index + count].value)) {
+            } else if (this.boundaries instanceof RegExp && this.boundaries.test(tokenList[index + count].value)) {
                 breaked = true;
+            } else {
+                count++;
             }
-            count++;
         }
 
         if (count > 1) {
