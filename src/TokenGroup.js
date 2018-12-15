@@ -58,14 +58,14 @@ class TokenGroup {
                 return escapeRegExp(item);
             });
 
-            include = (solver.include.length) ? `(${include.join('|')})` : '';
+            include = (solver.include.length) ? `${include.join('|')}` : '';
             symbols = (solver.symbols.length) ? `(${symbols.join('|')})` : '';
             regexp = (solver.regexp) ? `(${solver.regexp.source})` : '';
 
             if (solver.regexp) {
                 regexps.push(`(?<${item.name}>${regexp})`);
             } else if (solver.include.length) {
-                regexps.push(`((\\W|^)(?<${item.name}>${include})\\W)`);
+                regexps.push(`((?:^|\\b)(?<${item.name}>${include})(?=\\b|$))`);
             } else if (solver.symbols.length) {
                 regexps.push(`(?<${item.name}>${symbols})`);
             }

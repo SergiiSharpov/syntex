@@ -67,7 +67,7 @@ class AnalyzerNode extends EventEmitter {
      * @static
      */
     static getContentFromRange(content, list, start, end) {
-        return content.slice(list[start].range[0], list[end].range[1]);
+        return content.substring(list[start].range[0], list[end].range[1]);
     }
 }
 
