@@ -1,5 +1,6 @@
-let assert = require('assert');
-let {generateTokenGroup, StringSolver} = require('./../index');
+const assert = require('assert');
+const {generateTokenGroup, Solvers} = require('./../index');
+const {StringSolver} = Solvers;
 
 const program = 'let place = "world"; const hi = "hello" + place;';
 

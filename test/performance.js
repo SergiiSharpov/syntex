@@ -1,6 +1,8 @@
-let assert = require('assert');
-let fs = require('fs');
-let {generateTokenGroup, StringSolver, DefaultTokenTypes} = require('./../index');
+const assert = require('assert');
+const fs = require('fs');
+const {generateTokenGroup, Solvers, Const} = require('./../index');
+const {StringSolver} = Solvers;
+const {DefaultTokenTypes} = Const;
 
 const program = fs.readFileSync('./test/codeExample');
 

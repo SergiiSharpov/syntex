@@ -101,7 +101,9 @@ class SequenceNode extends AnalyzerNode {
                 if (this.sequence[i] instanceof AnalyzerNode) {
                     target = this.sequence[i].test(tokenList, index + count, parent, analyzer);
                     if (!target && this.sequence[i].important) {
-                        (count > 0 && valid) && this.__pushError(tokenList, index, index + count, analyzer);
+                        if (count > 0 && valid) {
+                            this.__pushError(tokenList, index, index + count, analyzer);
+                        }
                         valid = false;
                     } else if (!target) {
                         this.sequenceValid[i] = false;
@@ -113,7 +115,9 @@ class SequenceNode extends AnalyzerNode {
                     }
                 } else if (typeof this.sequence[i] === 'string' || this.sequence[i] instanceof RegExp) {
                     if (tokenList[index + count].value.indexOf(this.sequence[i]) === -1) {
-                        (count > 0 && valid) && this.__pushError(tokenList, index, index + count, analyzer);
+                        if (count > 0 && valid) {
+                            this.__pushError(tokenList, index, index + count, analyzer);
+                        }
                         valid = false;
                     } else {
                         ranges.push([index + count, index + count + 1]);
@@ -121,7 +125,9 @@ class SequenceNode extends AnalyzerNode {
                     }
                 } else if (this.sequence[i] instanceof Array) {
                     if (this.sequence[i].indexOf(tokenList[index + count].value) === -1) {
-                        (count > 0 && valid) && this.__pushError(tokenList, index, index + count, analyzer);
+                        if (count > 0 && valid) {
+                            this.__pushError(tokenList, index, index + count, analyzer);
+                        }
                         valid = false;
                     } else {
                         ranges.push([index + count, index + count + 1]);
@@ -129,7 +135,9 @@ class SequenceNode extends AnalyzerNode {
                     }
                 } else if (typeof this.sequence[i] === 'object') {
                     if (this.sequence[i].type.indexOf(tokenList[index + count].type) === -1) {
-                        (count > 0 && valid) && this.__pushError(tokenList, index, index + count, analyzer);
+                        if (count > 0 && valid) {
+                            this.__pushError(tokenList, index, index + count, analyzer);
+                        }
                         valid = false;
                     } else {
                         ranges.push([index + count, index + count + 1]);
@@ -173,7 +181,9 @@ class SequenceNode extends AnalyzerNode {
                 }
             }
 
-            this.subNodes && this.subNodes.length && analyzer.analyze(node.value, node, this.subNodes);
+            if (this.subNodes && this.subNodes.length) {
+                analyzer.analyze(node.value, node, this.subNodes);
+            }
 
             return length;
         }

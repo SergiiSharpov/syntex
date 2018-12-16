@@ -55,7 +55,7 @@ module.exports = {
             "error",
             "last"
         ],
-        "complexity": "error",
+        "complexity": ["error", 24],
         "computed-property-spacing": [
             "error",
             "never"
@@ -112,7 +112,7 @@ module.exports = {
             "always"
         ],
         "max-classes-per-file": "off",
-        "max-depth": "error",
+        "max-depth": ["error", 6],
         "max-len": "off",
         "max-lines": "off",
         "max-lines-per-function": "off",
