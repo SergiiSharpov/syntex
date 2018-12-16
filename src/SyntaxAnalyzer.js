@@ -1,4 +1,5 @@
 const SyntaxNode = require("./SyntaxNode");
+const EventEmitter = require("./EventEmitter");
 
 /**
  * Syntax analyzer is used to build AST from token list
@@ -6,14 +7,16 @@ const SyntaxNode = require("./SyntaxNode");
  * @property defaultNodeProps {Array} Array of default nodes
  * @property program {String} Program source code
  */
-class SyntaxAnalyzer {
+class SyntaxAnalyzer extends EventEmitter {
     /**
      * @param defaultNodes {Array} Array of default nodes
      */
     constructor(defaultNodes = []) {
+        super();
         this.tree = new SyntaxNode();
         this.defaultNodeProps = defaultNodes;
         this.program = '';
+        this.errors = [];
     }
 
     /**
@@ -23,6 +26,11 @@ class SyntaxAnalyzer {
      * @param analyzerNodes {Array} Array of AnalyzerNodes
      */
     analyze(tokenList = [], parent = this.tree, analyzerNodes = this.defaultNodeProps) {
+        if (parent === this.tree) {
+            this.errors.splice(0);
+            this.tree.clear();
+        }
+
         let i = 0;
         let valid, errorNode;
         while (i < tokenList.length) {
@@ -44,9 +52,13 @@ class SyntaxAnalyzer {
             if (!valid && errorNode) {
                 if (errorNode.error) {
                     errorNode.emit('syntax-error', {data: {...errorNode.error}});
+                    this.errors.push({...errorNode.error});
                 }
                 errorNode.getError();
             }
+        }
+        if (this.errors.length && parent === this.tree) {
+            this.emit('syntax-error', {data: this.errors});
         }
     }
 

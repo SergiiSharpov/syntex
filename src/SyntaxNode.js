@@ -130,6 +130,16 @@ class SyntaxNode {
         this.childs.push(node);
         node.parent = this;
     }
+
+    /**
+     * Clears children of current node
+     */
+    clear() {
+        for(let child of this.childs) {
+            child.clear();
+        }
+        this.childs = [];
+    }
 }
 
 module.exports = SyntaxNode;

@@ -15,6 +15,7 @@ class AnalyzerNode extends EventEmitter {
      * @param props.type {String} Type of the AnalyzerNode
      * @param props.subNodes {Array|undefined} Sub nodes that will be used to parse children nodes, if not present - defaultNodes of SyntaxAnalyzer will be used
      * @param props.important {Boolean} If false then sequence will be parsed even that node is not exist in the array of tokens
+     * @param props.template {Object} Object that helps to save info about SequenceNode
      */
     constructor({tokenType, type = DefaultNodeTypes.UNKNOWN, subNodes = undefined, important = true, template = null}) {
         super();

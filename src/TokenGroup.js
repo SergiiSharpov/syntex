@@ -44,7 +44,7 @@ class TokenGroup {
         }
 
         solvers = solvers.sort((a, b) => {
-            return a.solver.priority < b.solver.priority;
+            return b.solver.priority - a.solver.priority;
         });
 
         for(item of solvers) {
